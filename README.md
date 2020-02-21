@@ -129,6 +129,7 @@ You can customize the automatic generated proxy with the following special label
 | Label | Example | Description | Required |
 | - | - | - | - |
 | caddy.address | service.example.com | addresses that should be proxied separated by whitespace | Required |
+| caddy.sourcepath | /source | the path being served by container | Optional |
 | caddy.targetport | 8080 | the port being server by container | Optional |
 | caddy.targetpath | /api | the path being served by container | Optional |
 | caddy.targetprotocol | https | the protocol being served by container | Optional |
@@ -136,7 +137,7 @@ You can customize the automatic generated proxy with the following special label
 When all the values above are added to a service, the following configuration will be generated:
 ```
 service.example.com {
-	proxy / https://servicename:8080/api
+	proxy /source https://servicename:8080/api
 }
 ```
 
