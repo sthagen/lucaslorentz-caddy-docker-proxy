@@ -3,11 +3,15 @@ package plugin
 import (
 	"bytes"
 	"context"
+	crand "crypto/rand"
 	"flag"
 	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
+	"math"
+	"math/big"
+	rand "math/rand"
 	"os"
 	"regexp"
 	"sort"
@@ -203,31 +207,6 @@ func (g *CaddyfileGenerator) GenerateCaddyFile() ([]byte, string) {
 	writeDirectives(&caddyfileBuffer, directives, 0)
 
 	return caddyfileBuffer.Bytes(), logsBuffer.String()
-}
-
-func mergeDirectives(directiveA *directiveData, directiveB *directiveData) *directiveData {
-	if directiveA == nil {
-		return directiveB
-	}
-	if directiveB == nil {
-		return directiveA
-	}
-
-	for keyB, subDirectiveB := range directiveB.children {
-		if subDirectiveB.name == "proxy" {
-			proxyB := subDirectiveB
-			if proxyA, exists := directiveA.children[keyB]; exists {
-				if len(proxyA.args) > 0 && len(proxyB.args) > 0 && proxyA.args[0] == proxyB.args[0] {
-					proxyA.addArgs(proxyB.args[1:]...)
-					continue
-				}
-			}
-		}
-
-		directiveA.children[keyB] = subDirectiveB
-	}
-
-	return directiveA
 }
 
 func (g *CaddyfileGenerator) checkSwarmAvailability(isFirstCheck bool) {
@@ -461,4 +440,56 @@ type directiveData struct {
 
 func (directive *directiveData) addArgs(args ...string) {
 	directive.args = append(directive.args, args...)
+}
+
+func mergeDirectives(directiveA *directiveData, directiveB *directiveData) *directiveData {
+	if directiveA == nil {
+		return directiveB
+	}
+	if directiveB == nil {
+		return directiveA
+	}
+
+	for keyB, subDirectiveB := range directiveB.children {
+		if subDirectiveA, exists := directiveA.children[keyB]; exists {
+			if subDirectiveA.name == "proxy" &&
+				subDirectiveB.name == "proxy" &&
+				len(subDirectiveA.args) > 0 &&
+				len(subDirectiveB.args) > 0 &&
+				subDirectiveA.args[0] == subDirectiveB.args[0] {
+				subDirectiveA.addArgs(subDirectiveB.args[1:]...)
+				continue
+			} else if directivesAreSimilar(subDirectiveA, subDirectiveB) {
+				continue
+			}
+
+			keyB = removeSuffix(keyB) + "_" + createUniqueSuffix()
+		}
+
+		directiveA.children[keyB] = subDirectiveB
+	}
+
+	return directiveA
+}
+
+func directivesAreSimilar(directiveA *directiveData, directiveB *directiveData) bool {
+	if len(directiveA.args) != len(directiveB.args) {
+		return false
+	}
+
+	for i := 0; i < len(directiveA.args); i++ {
+		if directiveA.args[i] != directiveB.args[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func createUniqueSuffix() string {
+	val, err := crand.Int(crand.Reader, big.NewInt(int64(math.MaxInt64)))
+	if err != nil {
+		return string(rand.Uint64())
+	}
+	return string(val.Uint64())
 }
