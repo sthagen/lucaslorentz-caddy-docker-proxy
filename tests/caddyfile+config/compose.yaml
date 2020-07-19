@@ -1,0 +1,39 @@
+version: "3.7"
+
+configs:
+  caddy-basic-content:
+    file: ./CaddyfileConfig
+    labels:
+      caddy:
+
+services:
+  caddy:
+    image: caddy-docker-proxy:local
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - caddy
+    environment:
+      - CADDY_DOCKER_CADDYFILE_PATH=/test/Caddyfile
+    volumes:
+      - ./Caddyfile:/test/Caddyfile
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      labels:
+        caddy.email: "test@example.com"
+
+  service:
+    image: jwilder/whoami
+    networks:
+      - caddy
+    deploy:
+      labels:
+        caddy: service.local
+        caddy.import_0: caddyfileSnippet
+        caddy.import_1: configSnippet
+
+networks:
+  caddy:
+    name: caddy_test
+    external: true

@@ -1,16 +1,16 @@
-version: '3'
+version: "3"
 
 services:
   caddy:
     image: lucaslorentz/caddy-docker-proxy
     ports:
-      - 2015:2015
+      - 80:80
+      - 443:443
     networks:
       - caddy
-    command: -email email@caddy-docker-demo -agree=true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - caddy:/root/.caddy
+      - caddy_data:/data
     deploy:
       placement:
         constraints:
@@ -20,11 +20,11 @@ services:
         condition: any
       resources:
         reservations:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 200M
 
 volumes:
-  caddy:
+  caddy_data:
     driver: rexray/efs
 
 networks:

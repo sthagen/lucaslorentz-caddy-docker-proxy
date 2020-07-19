@@ -1,0 +1,5 @@
+caddy.key = value
+----------
+{
+	key value
+}

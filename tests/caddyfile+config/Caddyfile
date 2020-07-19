@@ -1,0 +1,8 @@
+(caddyfileSnippet) {
+    respond /caddyfile "caddyfile" 200
+}
+
+caddyfile.local {
+    respond / "caddyfile" 200
+    tls internal
+}

@@ -1,0 +1,53 @@
+{
+	email you@example.com
+}
+(mysnippet) {
+	encode gzip
+}
+service1.example.com {
+	reverse_proxy service1:5000 {
+		invalid
+	}
+}
+service2.example.com {
+	respond 200 /
+	# Comment
+	reverse_proxy service2:5000 {
+		health_path /health
+	}
+	import mysnippet
+}
+service3.example.com {
+	respond 404 /
+	basicauth /secret {
+		user " a \ b"
+	}
+}
+----------
+{
+	email you@example.com
+}
+(mysnippet) {
+	encode gzip
+}
+service2.example.com {
+	respond 200 /
+	reverse_proxy service2:5000 {
+		health_path /health
+	}
+	import mysnippet
+}
+service3.example.com {
+	respond 404 /
+	basicauth /secret {
+		user " a \ b"
+	}
+}
+----------
+[ERROR]  Removing invalid block: parsing caddyfile tokens for 'reverse_proxy': Caddyfile:9 - Error during parsing: unrecognized subdirective invalid
+service1.example.com {
+	reverse_proxy service1:5000 {
+		invalid
+	}
+}
+

@@ -1,0 +1,8 @@
+(configSnippet) {
+    respond /config "config" 200
+}
+
+config.local {
+    respond / "config" 200
+    tls internal
+}
