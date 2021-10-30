@@ -15,9 +15,9 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
-	"github.com/lucaslorentz/caddy-docker-proxy/plugin/v2/config"
-	"github.com/lucaslorentz/caddy-docker-proxy/plugin/v2/docker"
-	"github.com/lucaslorentz/caddy-docker-proxy/plugin/v2/generator"
+	"github.com/lucaslorentz/caddy-docker-proxy/plugin/config"
+	"github.com/lucaslorentz/caddy-docker-proxy/plugin/docker"
+	"github.com/lucaslorentz/caddy-docker-proxy/plugin/generator"
 
 	"go.uber.org/zap"
 )
@@ -90,9 +90,12 @@ func (dockerLoader *DockerLoader) Start() error {
 			zap.String("IngressNetworks", fmt.Sprintf("%v", dockerLoader.options.IngressNetworks)),
 		)
 
+		ready := make(chan struct{})
 		dockerLoader.timer = time.AfterFunc(0, func() {
+			<-ready
 			dockerLoader.update()
 		})
+		close(ready)
 
 		go dockerLoader.monitorEvents()
 	}
