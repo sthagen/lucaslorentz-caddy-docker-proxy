@@ -482,6 +482,13 @@ Usage of docker-proxy:
   -ingress-networks string
         Comma separated name of ingress networks connecting Caddy servers to containers.
         When not defined, networks attached to controller container are considered ingress networks
+  -docker-sockets
+        Comma separated docker sockets
+        When not defined, DOCKER_HOST (or default docker socket if DOCKER_HOST not defined)
+  -docker-certs-path
+        Comma separated cert path, you could use empty value when no cert path for the concern index docker socket like cert_path0,,cert_path2
+  -docker-apis-version
+        Comma separated apis version, you could use empty value when no api version for the concern index docker socket like cert_path0,,cert_path2
   -label-prefix string
         Prefix for Docker labels (default "caddy")
   -mode
@@ -500,6 +507,9 @@ Those flags can also be set via environment variables:
 CADDY_DOCKER_CADDYFILE_PATH=<string>
 CADDY_CONTROLLER_NETWORK=<string>
 CADDY_INGRESS_NETWORKS=<string>
+CADDY_DOCKER_SOCKETS=<string>
+CADDY_DOCKER_CERTS_PATH=<string>
+CADDY_DOCKER_APIS_VERSION=<string>
 CADDY_DOCKER_LABEL_PREFIX=<string>
 CADDY_DOCKER_MODE=<string>
 CADDY_DOCKER_POLLING_INTERVAL=<duration>
@@ -536,13 +546,13 @@ Currently we provide linux x86_64 images by default.
 You can also find images for other architectures like `arm32v6` images that can be used on Raspberry Pi.
 
 ### Windows images
-We recently introduced experimental windows containers images with the tag suffix `nanoserver-1803`.
+We recently introduced experimental windows containers images with the tag suffix `nanoserver-ltsc2022`.
 
 Be aware that this needs to be tested further.
 
 This is an example of how to mount the windows Docker pipe using CLI:
 ```shell
-$ docker run --rm -it -v //./pipe/docker_engine://./pipe/docker_engine lucaslorentz/caddy-docker-proxy:ci-nanoserver-1803
+$ docker run --rm -it -v //./pipe/docker_engine://./pipe/docker_engine lucaslorentz/caddy-docker-proxy:ci-nanoserver-ltsc2022
 ```
 
 ### Custom images
@@ -585,8 +595,6 @@ To do that, map a persistent Docker volume to `/data` folder.
 For resilient production deployments, use multiple Caddy replicas and map `/data` folder to a volume that supports multiple mounts, like Network File Sharing Docker volumes plugins.
 
 Multiple Caddy instances automatically orchestrate certificate issuing between themselves when sharing `/data` folder.
-
-[Here is an example](examples/efs-volume.yaml) of a compose file with replicas and persistent volume using  Rexray EFS Plugin for AWS.
 
 ## Trying it
 
