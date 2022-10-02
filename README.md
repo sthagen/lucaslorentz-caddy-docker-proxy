@@ -481,29 +481,29 @@ Run `caddy help docker-proxy` to see all available flags.
 
 ```
 Usage of docker-proxy:
-  -caddyfile-path string
+  --caddyfile-path string
         Path to a base Caddyfile that will be extended with Docker sites
-  -controller-network string
+  --controller-network string
         Network allowed to configure Caddy server in CIDR notation. Ex: 10.200.200.0/24
-  -ingress-networks string
+  --ingress-networks string
         Comma separated name of ingress networks connecting Caddy servers to containers.
         When not defined, networks attached to controller container are considered ingress networks
-  -docker-sockets
+  --docker-sockets
         Comma separated docker sockets
         When not defined, DOCKER_HOST (or default docker socket if DOCKER_HOST not defined)
-  -docker-certs-path
+  --docker-certs-path
         Comma separated cert path, you could use empty value when no cert path for the concern index docker socket like cert_path0,,cert_path2
-  -docker-apis-version
+  --docker-apis-version
         Comma separated apis version, you could use empty value when no api version for the concern index docker socket like cert_path0,,cert_path2
-  -label-prefix string
+  --label-prefix string
         Prefix for Docker labels (default "caddy")
-  -mode
+  --mode
         Which mode this instance should run: standalone | controller | server
-  -polling-interval duration
+  --polling-interval duration
         Interval Caddy should manually check Docker for a new Caddyfile (default 30s)
-  -process-caddyfile
+  --process-caddyfile
         Process Caddyfile before loading it, removing invalid servers (default true)
-  -proxy-service-tasks
+  --proxy-service-tasks
         Proxy to service tasks instead of service load balancer (default true)
 ```
 
@@ -567,11 +567,11 @@ If you need additional Caddy plugins, or need to use a specific version of Caddy
 The main difference from the instructions on the official image is that you must override `CMD` to have the container run using the `caddy docker-proxy` command provided by this plugin.
 
 ```Dockerfile
-ARG CADDY_VERSION=2.5.0
+ARG CADDY_VERSION=2.6.1
 FROM caddy:${CADDY_VERSION}-builder AS builder
 
 RUN xcaddy build \
-    --with github.com/lucaslorentz/caddy-docker-proxy/plugin \
+    --with github.com/lucaslorentz/caddy-docker-proxy/v2 \
     --with <additional-plugins>
 
 FROM caddy:${CADDY_VERSION}-alpine
