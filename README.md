@@ -501,10 +501,14 @@ Usage of docker-proxy:
         Which mode this instance should run: standalone | controller | server
   --polling-interval duration
         Interval Caddy should manually check Docker for a new Caddyfile (default 30s)
+  --event-throttle-interval duration
+        Interval to throttle caddyfile updates triggered by docker events (default 100ms)
   --process-caddyfile
         Process Caddyfile before loading it, removing invalid servers (default true)
   --proxy-service-tasks
         Proxy to service tasks instead of service load balancer (default true)
+  --scan-stopped-containers
+        Scan stopped containers and use their labels for Caddyfile generation (default false)
 ```
 
 Those flags can also be set via environment variables:
@@ -521,6 +525,7 @@ CADDY_DOCKER_MODE=<string>
 CADDY_DOCKER_POLLING_INTERVAL=<duration>
 CADDY_DOCKER_PROCESS_CADDYFILE=<bool>
 CADDY_DOCKER_PROXY_SERVICE_TASKS=<bool>
+CADDY_DOCKER_SCAN_STOPPED_CONTAINERS=<bool>
 CADDY_DOCKER_NO_SCOPE=<bool, default scope used>
 ```
 

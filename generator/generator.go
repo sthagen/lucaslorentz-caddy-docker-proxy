@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"regexp"
 	"time"
 
@@ -72,7 +72,7 @@ func (g *CaddyfileGenerator) GenerateCaddyfile(logger *zap.Logger) ([]byte, []st
 
 	// Add caddyfile from path
 	if g.options.CaddyfilePath != "" {
-		dat, err := ioutil.ReadFile(g.options.CaddyfilePath)
+		dat, err := os.ReadFile(g.options.CaddyfilePath)
 		if err != nil {
 			logger.Error("Failed to read Caddyfile", zap.String("path", g.options.CaddyfilePath), zap.Error(err))
 		} else {
@@ -117,7 +117,7 @@ func (g *CaddyfileGenerator) GenerateCaddyfile(logger *zap.Logger) ([]byte, []st
 		}
 
 		// Add containers
-		containers, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{})
+		containers, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{All: g.options.ScanStoppedContainers})
 		if err == nil {
 			for _, container := range containers {
 				if _, isControlledServer := container.Labels[g.options.ControlledServersLabel]; isControlledServer {

@@ -58,8 +58,14 @@ func init() {
 			fs.Bool("process-caddyfile", true,
 				"Process Caddyfile before loading it, removing invalid servers")
 
+			fs.Bool("scan-stopped-containers", true,
+				"Scan stopped containers and use its labels for caddyfile generation")
+
 			fs.Duration("polling-interval", 30*time.Second,
 				"Interval caddy should manually check docker for a new caddyfile")
+
+			fs.Duration("event-throttle-interval", 100*time.Millisecond,
+				"Interval to throttle caddyfile updates triggered by docker events")
 
 			return fs
 		}(),
@@ -138,7 +144,9 @@ func createOptions(flags caddycmd.Flags) *config.Options {
 	labelPrefixFlag := flags.String("label-prefix")
 	proxyServiceTasksFlag := flags.Bool("proxy-service-tasks")
 	processCaddyfileFlag := flags.Bool("process-caddyfile")
+	scanStoppedContainersFlag := flags.Bool("scan-stopped-containers")
 	pollingIntervalFlag := flags.Duration("polling-interval")
+	eventThrottleIntervalFlag := flags.Duration("event-throttle-interval")
 	modeFlag := flags.String("mode")
 	controllerSubnetFlag := flags.String("controller-network")
 	dockerSocketsFlag := flags.String("docker-sockets")
@@ -233,6 +241,12 @@ func createOptions(flags caddycmd.Flags) *config.Options {
 		options.ProcessCaddyfile = processCaddyfileFlag
 	}
 
+	if scanStoppedContainersEnv := os.Getenv("CADDY_DOCKER_SCAN_STOPPED_CONTAINERS"); scanStoppedContainersEnv != "" {
+		options.ScanStoppedContainers = isTrue.MatchString(scanStoppedContainersEnv)
+	} else {
+		options.ScanStoppedContainers = scanStoppedContainersFlag
+	}
+
 	if pollingIntervalEnv := os.Getenv("CADDY_DOCKER_POLLING_INTERVAL"); pollingIntervalEnv != "" {
 		if p, err := time.ParseDuration(pollingIntervalEnv); err != nil {
 			log.Error("Failed to parse CADDY_DOCKER_POLLING_INTERVAL", zap.String("CADDY_DOCKER_POLLING_INTERVAL", pollingIntervalEnv), zap.Error(err))
@@ -242,6 +256,17 @@ func createOptions(flags caddycmd.Flags) *config.Options {
 		}
 	} else {
 		options.PollingInterval = pollingIntervalFlag
+	}
+
+	if eventThrottleIntervalEnv := os.Getenv("CADDY_DOCKER_EVENT_THROTTLE_INTERVAL"); eventThrottleIntervalEnv != "" {
+		if p, err := time.ParseDuration(eventThrottleIntervalEnv); err != nil {
+			log.Error("Failed to parse CADDY_DOCKER_EVENT_THROTTLE_INTERVAL", zap.String("CADDY_DOCKER_EVENT_THROTTLE_INTERVAL", eventThrottleIntervalEnv), zap.Error(err))
+			options.EventThrottleInterval = pollingIntervalFlag
+		} else {
+			options.EventThrottleInterval = p
+		}
+	} else {
+		options.EventThrottleInterval = eventThrottleIntervalFlag
 	}
 
 	return options

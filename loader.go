@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"path/filepath"
 	"sync"
@@ -138,8 +138,9 @@ func (dockerLoader *DockerLoader) Start() error {
 			zap.String("CaddyfilePath", dockerLoader.options.CaddyfilePath),
 			zap.String("LabelPrefix", dockerLoader.options.LabelPrefix),
 			zap.Duration("PollingInterval", dockerLoader.options.PollingInterval),
-			zap.Bool("ProcessCaddyfile", dockerLoader.options.ProcessCaddyfile),
 			zap.Bool("ProxyServiceTasks", dockerLoader.options.ProxyServiceTasks),
+			zap.Bool("ProcessCaddyfile", dockerLoader.options.ProcessCaddyfile),
+			zap.Bool("ScanStoppedContainers", dockerLoader.options.ScanStoppedContainers),
 			zap.String("IngressNetworks", fmt.Sprintf("%v", dockerLoader.options.IngressNetworks)),
 			zap.Strings("DockerSockets", dockerLoader.options.DockerSockets),
 			zap.Strings("DockerCertsPath", dockerLoader.options.DockerCertsPath),
@@ -208,7 +209,7 @@ func (dockerLoader *DockerLoader) listenEvents() {
 
 				if update {
 					dockerLoader.skipEvents[i] = true
-					dockerLoader.timer.Reset(100 * time.Millisecond)
+					dockerLoader.timer.Reset(dockerLoader.options.EventThrottleInterval)
 				}
 			case err := <-errorChan:
 				cancel()
@@ -314,7 +315,7 @@ func (dockerLoader *DockerLoader) updateServer(wg *sync.WaitGroup, server string
 		return
 	}
 
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Error("Failed to read response from", zap.String("server", server), zap.Error(err))
 		return
