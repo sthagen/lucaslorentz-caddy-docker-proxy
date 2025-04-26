@@ -1,12 +1,6 @@
 # Caddy-Docker-Proxy 
 [![Build Status](https://dev.azure.com/lucaslorentzlara/lucaslorentzlara/_apis/build/status/lucaslorentz.caddy-docker-proxy?branchName=master)](https://dev.azure.com/lucaslorentzlara/lucaslorentzlara/_build/latest?definitionId=1) [![Go Report Card](https://goreportcard.com/badge/github.com/lucaslorentz/caddy-docker-proxy)](https://goreportcard.com/report/github.com/lucaslorentz/caddy-docker-proxy)
 
-## NEW MODULE NAME!
-
-We've renamed our go module, from version 2.7.0 forward you should import caddy-docker-proxy using `github.com/lucaslorentz/caddy-docker-proxy/v2` or a specific version `github.com/lucaslorentz/caddy-docker-proxy/v2@v2.7.0`.
-
-The old name `github.com/lucaslorentz/caddy-docker-proxy/plugin` will be a available for backwards compatibility, but it will not have the latest version.
-
 ## Introduction
 This plugin enables Caddy to be used as a reverse proxy for Docker containers via labels.
 
@@ -459,13 +453,15 @@ Server instances doesn't need access to Docker host socket and you can run it in
 
 ### Controller
 
-Controller monitors your Docker cluster, generates Caddy configuration and pushes to all servers it finds in your Docker cluster.
+Controller monitors your Docker cluster, generates Caddy configuration, and pushes it to all servers it finds in your Docker cluster.
 
 When controller instances are connected to more than one network, it is also necessary to define the controller network via CLI option `controller-network` or environment variable `CADDY_CONTROLLER_NETWORK`.
 
 Controller instances require access to Docker host socket.
 
 A single controller instance can configure all server instances in your cluster.
+
+**:warning: Controller mode requires server nodes to serve traffic.**
 
 [Configuration example](examples/distributed.yaml#L21)
 
