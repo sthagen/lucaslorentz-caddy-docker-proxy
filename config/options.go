@@ -9,6 +9,7 @@ import (
 type Options struct {
 	CaddyfilePath          string
 	EnvFile                string
+	AdminListen            string
 	DockerSockets          []string
 	DockerCertsPath        []string
 	DockerAPIsVersion      []string
