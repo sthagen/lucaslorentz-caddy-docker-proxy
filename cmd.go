@@ -110,6 +110,10 @@ func cmdFunc(flags caddycmd.Flags) (int, error) {
 }
 
 func getAdminListen(options *config.Options) string {
+	if options.AdminListen != "" {
+		return options.AdminListen
+	}
+
 	if options.ControllerNetwork != nil {
 		ifaces, err := net.Interfaces()
 		log := logger()
@@ -140,6 +144,17 @@ func getAdminListen(options *config.Options) string {
 		}
 	}
 	return "tcp/localhost:2019"
+}
+
+func normalizeAdminListen(listen string) string {
+	listen = strings.TrimSpace(listen)
+	if listen == "" {
+		return ""
+	}
+	if strings.Contains(listen, "/") {
+		return listen
+	}
+	return "tcp/" + listen
 }
 
 func createOptions(flags caddycmd.Flags) *config.Options {
@@ -176,6 +191,10 @@ func createOptions(flags caddycmd.Flags) *config.Options {
 	}
 
 	log := logger()
+
+	if adminListenEnv := os.Getenv("CADDY_ADMIN"); adminListenEnv != "" {
+		options.AdminListen = normalizeAdminListen(adminListenEnv)
+	}
 
 	if dockerSocketsEnv := os.Getenv("CADDY_DOCKER_SOCKETS"); dockerSocketsEnv != "" {
 		options.DockerSockets = strings.Split(dockerSocketsEnv, ",")
