@@ -13,7 +13,7 @@ func TestContainers_TemplateData(t *testing.T) {
 	dockerClient.ContainersData = []types.Container{
 		{
 			Names: []string{
-				"container-name",
+				"/container-name",
 			},
 			NetworkSettings: &types.SummaryNetworkSettings{
 				Networks: map[string]*network.EndpointSettings{
@@ -24,7 +24,7 @@ func TestContainers_TemplateData(t *testing.T) {
 				},
 			},
 			Labels: map[string]string{
-				fmtLabel("%s"):               "{{index .Names 0}}.testdomain.com",
+				fmtLabel("%s"):               "{{trimPrefix \"/\" (index .Names 0)}}.testdomain.com",
 				fmtLabel("%s.reverse_proxy"): "{{(index .NetworkSettings.Networks \"caddy-network\").IPAddress}}:5000/api",
 			},
 		},
@@ -131,7 +131,7 @@ func TestContainers_ManualIngressNetworks(t *testing.T) {
 		"	reverse_proxy 10.0.0.1\n" +
 		"}\n"
 
-	const expectedLogs = otherIngressNetworksMapLog + swarmIsAvailableLog
+	const expectedLogs = swarmIsAvailableLog
 
 	testGeneration(t, dockerClient, func(options *config.Options) {
 		options.IngressNetworks = []string{"other-network-name"}
@@ -177,7 +177,7 @@ func TestContainers_OverrideIngressNetworks(t *testing.T) {
 		"	reverse_proxy 10.0.0.2\n" +
 		"}\n"
 
-	const expectedLogs = otherIngressNetworksMapLog + swarmIsAvailableLog
+	const expectedLogs = swarmIsAvailableLog
 
 	testGeneration(t, dockerClient, func(options *config.Options) {
 		options.IngressNetworks = []string{"other-network-name"}

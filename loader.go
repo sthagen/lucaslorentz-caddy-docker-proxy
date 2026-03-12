@@ -158,6 +158,7 @@ func (dockerLoader *DockerLoader) Start() error {
 		zap.Strings("DockerSockets", dockerLoader.options.DockerSockets),
 		zap.Strings("DockerCertsPath", dockerLoader.options.DockerCertsPath),
 		zap.Strings("DockerAPIsVersion", dockerLoader.options.DockerAPIsVersion),
+		zap.String("CaddyfileAutosavePath", CaddyfileAutosavePath),
 	)
 
 	ready := make(chan struct{})
@@ -355,8 +356,9 @@ func addAdminListen(configJSON []byte, listen string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Respect explicit admin settings from Caddyfile/JSON config.
-	if config.Admin != nil {
+	// Respect explicit admin settings from Caddyfile/JSON config,
+	// but override "admin off" since the plugin requires the admin API.
+	if config.Admin != nil && !config.Admin.Disabled {
 		return configJSON, nil
 	}
 	config.Admin = &caddy.AdminConfig{
