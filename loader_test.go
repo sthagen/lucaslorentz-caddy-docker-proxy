@@ -46,14 +46,82 @@ func TestPrepareServerConfig(t *testing.T) {
 		assert.Equal(t, "tcp/0.0.0.0:2019", unmarshalConfig(t, out).Admin.Listen)
 	})
 
-	t.Run("overrides admin off", func(t *testing.T) {
+	t.Run("overrides admin off for remote servers", func(t *testing.T) {
+		in, err := json.Marshal(&caddy.Config{Admin: &caddy.AdminConfig{Disabled: true}})
+		require.NoError(t, err)
+		out, err := newLoader(in, nil).prepareServerConfig("10.0.0.2")
+		require.NoError(t, err)
+		result := unmarshalConfig(t, out)
+		assert.False(t, result.Admin.Disabled)
+		assert.Equal(t, "tcp/10.0.0.2:2019", result.Admin.Listen)
+	})
+
+	t.Run("respects admin off from config for local server", func(t *testing.T) {
 		in, err := json.Marshal(&caddy.Config{Admin: &caddy.AdminConfig{Disabled: true}})
 		require.NoError(t, err)
 		out, err := newLoader(in, nil).prepareServerConfig("localhost")
 		require.NoError(t, err)
 		result := unmarshalConfig(t, out)
+		assert.True(t, result.Admin.Disabled)
+		assert.Empty(t, result.Admin.Listen)
+	})
+
+	t.Run("explicit admin listen in config wins over CADDY_ADMIN=off for local server", func(t *testing.T) {
+		in, err := json.Marshal(&caddy.Config{Admin: &caddy.AdminConfig{Listen: "tcp/localhost:2020"}})
+		require.NoError(t, err)
+		loader := &DockerLoader{
+			options:        &config.Options{AdminDisabled: true},
+			lastJSONConfig: in,
+		}
+		out, err := loader.prepareServerConfig("localhost")
+		require.NoError(t, err)
+		result := unmarshalConfig(t, out)
+		assert.False(t, result.Admin.Disabled)
+		assert.Equal(t, "tcp/localhost:2020", result.Admin.Listen)
+	})
+
+	t.Run("uses the default admin listen for local server", func(t *testing.T) {
+		out, err := newLoader(empty, nil).prepareServerConfig("localhost")
+		require.NoError(t, err)
+		result := unmarshalConfig(t, out)
 		assert.False(t, result.Admin.Disabled)
 		assert.Equal(t, "tcp/localhost:2019", result.Admin.Listen)
+	})
+
+	t.Run("uses the CADDY_ADMIN listen for local server", func(t *testing.T) {
+		loader := &DockerLoader{
+			options:        &config.Options{AdminListen: "tcp/localhost:2020"},
+			lastJSONConfig: empty,
+		}
+		out, err := loader.prepareServerConfig("localhost")
+		require.NoError(t, err)
+		result := unmarshalConfig(t, out)
+		assert.False(t, result.Admin.Disabled)
+		assert.Equal(t, "tcp/localhost:2020", result.Admin.Listen)
+	})
+
+	t.Run("disables admin for local server when CADDY_ADMIN=off", func(t *testing.T) {
+		loader := &DockerLoader{
+			options:        &config.Options{AdminDisabled: true},
+			lastJSONConfig: empty,
+		}
+		out, err := loader.prepareServerConfig("localhost")
+		require.NoError(t, err)
+		result := unmarshalConfig(t, out)
+		assert.True(t, result.Admin.Disabled)
+		assert.Empty(t, result.Admin.Listen)
+	})
+
+	t.Run("keeps admin on for remote servers even when disabled locally", func(t *testing.T) {
+		loader := &DockerLoader{
+			options:        &config.Options{AdminDisabled: true},
+			lastJSONConfig: empty,
+		}
+		out, err := loader.prepareServerConfig("10.0.0.2")
+		require.NoError(t, err)
+		result := unmarshalConfig(t, out)
+		assert.False(t, result.Admin.Disabled)
+		assert.Equal(t, "tcp/10.0.0.2:2019", result.Admin.Listen)
 	})
 
 	t.Run("injects logging on the local Caddy", func(t *testing.T) {

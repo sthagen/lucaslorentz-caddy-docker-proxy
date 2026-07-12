@@ -349,9 +349,21 @@ func (dockerLoader *DockerLoader) prepareServerConfig(server string) ([]byte, er
 		return nil, err
 	}
 
-	// Respect an explicit admin endpoint, but override "admin off" since the
-	// plugin requires the admin API.
-	if config.Admin == nil || config.Admin.Disabled {
+	// The local instance loads in-process, so an explicit admin config ("admin
+	// off" included) is respected and only an absent one is filled from
+	// CADDY_ADMIN or the default. Remote servers always need a reachable admin
+	// endpoint for controller pushes, so an absent or disabled one is overridden.
+	if server == localServer {
+		if config.Admin == nil {
+			if dockerLoader.options.AdminDisabled {
+				config.Admin = &caddy.AdminConfig{Disabled: true}
+			} else if dockerLoader.options.AdminListen != "" {
+				config.Admin = &caddy.AdminConfig{Listen: dockerLoader.options.AdminListen}
+			} else {
+				config.Admin = &caddy.AdminConfig{Listen: defaultAdminListen}
+			}
+		}
+	} else if config.Admin == nil || config.Admin.Disabled {
 		config.Admin = &caddy.AdminConfig{Listen: getServerAdminListen(dockerLoader.options, server)}
 	}
 
